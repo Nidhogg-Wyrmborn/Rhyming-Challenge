@@ -3,7 +3,7 @@
 import os, pickle
 
 rhyming = {}
-debug = True
+debug = False
 
 for word in open('phodict.txt', 'r').readlines():
 	# word and phonemes is split by double space by sounds are split by single space
@@ -66,7 +66,16 @@ def rhymeswith(wordA, wordB, syllables):
 		return None
 
 # list commands
-commands = ['dispute', "bail", "pause"]
+commands = ['dispute', "bail", "pause", "score", "list"]
+
+# create score list
+score = []
+
+# create finals dict (keeps final score of players who gave up)
+finals = {}
+
+# create disallowed list (words that are not allowed)
+disallowed = []
 
 # ask if new game
 new = input("new game? [y/n]\n- ")
@@ -133,6 +142,7 @@ if new.lower().startswith('y'):
 
 		# append input to player list
 		player.append(input("- "))
+		score.append(0)
 
 		# clear screen
 		os.system("cls")
@@ -147,7 +157,7 @@ if new.lower().startswith('y'):
 	player_turn = 0
 
 	# initialize gamestate
-	game_state = {"previous": previous, "player": player, "player_turn": player_turn, "words": words, "startword": startword, "num_syl": num_syl}
+	game_state = {"previous": previous, "player": player, "player_turn": player_turn, "words": words, "startword": startword, "num_syl": num_syl, "score": score, "finals": finals, "disallowed": disallowed}
 
 else:
 	# if not newgame
@@ -173,6 +183,9 @@ else:
 			player_turn = game_state["player_turn"]
 			startword = game_state["startword"]
 			num_syl = game_state["num_syl"]
+			score = game_state["score"]
+			finals = game_state["finals"]
+			disallowed = game_state['disallowed']
 
 			# if debug show the variable contents
 			if debug:
@@ -182,6 +195,9 @@ else:
 				print(player_turn)
 				print(startword)
 				print(num_syl)
+				print(score)
+				print(finals)
+				print(disallowed)
 			break
 		else:
 			os.system("cls")
@@ -199,128 +215,171 @@ if previous:
 		print('no')
 	print(previous)
 
-while running:
+try:
+	while running:
 
-	# state which player's turn
-	print(f"player {player[player_turn]} - ", end="")
+		# state which player's turn
+		print(f"player {player[player_turn]} - ", end="")
 
-	# ask for word
-	word = str(input("word:\n- "))
+		# ask for word
+		word = str(input("word:\n- "))
 
-	# clear screen
-	os.system("cls")
+		# clear screen
+		os.system("cls")
 
-	# is "word" a command?
-	if word.startswith("#"):
-		# if word is a viable command
-		if word.replace("#", "") in commands:
-			# say it's recognized
-			print('command recognized')
+		# is "word" a command?
+		if word.startswith("#"):
+			# if word is a viable command
+			if word.replace("#", "") in commands:
+				# say it's recognized
+				print('command recognized')
 
-			# if it is a dispute then fix
-			if word.replace("#","") == commands[0]:  # dispute
-				# if there is something in previous
-				if previous:
-					# state the word being disputed
-					print(f"disputing {previous}")
+				# if it is a dispute then fix
+				if word.replace("#","") == commands[0]:  # dispute
+					# if there is something in previous
+					if previous:
+						# state the word being disputed
+						print(f"disputing {previous}")
 
-					# check if player is sure
-					s = input('are you sure?\n- ')
+						# check if player is sure
+						s = input('are you sure?\n- ')
 
-					# if yes then dispute
+						# if yes then dispute
+						if s.lower().startswith('y'):
+							# if it was accepted then deduct a point from player
+							# if it was rejected then add a point to player
+							if previous in words:
+								# state action taken
+								print('deduct a point from player')
+
+								words.pop(words.index(previous))
+								disallowed.append(previous)
+
+								# go back one player's turn
+								player_turn -= 1
+								if player_turn < 0:
+									player_turn = len(player)-1
+
+								score[player_turn] -= 1
+							else:
+								# state action taken
+								print('append a point to player')
+
+								words.append(previous)
+
+								score[player_turn] += 1
+
+								# go forward one player's turn
+								player_turn += 1
+								if player_turn >= len(player):
+									player_turn = 0
+					else:
+						# if there is nothing in previous then there is no word to dispute
+						print('no word to dispute')
+
+				# check if they bail (give up)
+				if word.replace("#","") == commands[1]:  # bail (give up)
+					# state the warning
+					print(f"{player[player_turn]} is giving up!")
+
+					# ask if the player is sure
+					s = input("are you sure?\n- ")
+
+					# if yes then remove player from list
 					if s.lower().startswith('y'):
-						# if it was accepted then deduct a point from player
-						# if it was rejected then add a point to player
-						if previous in words:
-							# state action taken
-							print('deduct a point from player')
 
-							# go back one player's turn
-							player_turn -= 1
-							if player_turn < 0:
-								player_turn = len(player)-1
-						else:
-							# state action taken
-							print('append a point to player')
+						finals[player[player_turn]] = score[player_turn]
 
-							# go forward one player's turn
-							player_turn += 1
-							if player_turn >= len(player):
-								player_turn = 0
-				else:
-					# if there is nothing in previous then there is no word to dispute
-					print('no word to dispute')
+						# pop player
+						player.pop(player_turn)
+						score.pop(player_turn)
 
-			# check if they bail (give up)
-			if word.replace("#","") == commands[1]:  # bail (give up)
-				# state the warning
-				print(f"{player[player_turn]} is giving up!")
+						# player_turn is now larger than number of players then fix
+						if player_turn >= len(player):
+							player_turn = 0
 
-				# ask if the player is sure
-				s = input("are you sure?\n- ")
+				# check if it is a pause command
+				if word.replace("#","") == commands[2]:  # pause (save game state)
+					# save game state into a dict
+					game_state = {"previous": previous, "player": player, "player_turn": player_turn, "words": words, "startword": startword, "num_syl": num_syl, "score": score, "finals": finals, "disallowed": disallowed}
 
-				# if yes then remove player from list
-				if s.lower().startswith('y'):
-					# pop player
-					player.pop(player_turn)
+					# pickle the dict into a file (as defined by user)
+					with open(input("save file as (Example.txt, Example.Game, etc.):\n- "), 'wb') as f:
+						game_state = pickle.dump(game_state, f)
 
-					# player_turn is now larger than number of players then fix
-					if player_turn >= len(player):
-						player_turn = 0
+						# set running to false
+						running = False
 
-			# check if it is a pause command
-			if word.replace("#","") == commands[2]:  # pause (save game state)
-				# save game state into a dict
-				game_state = {"previous": previous, "player": player, "player_turn": player_turn, "words": words, "startword": startword, "num_syl": num_syl}
+				# check if it is a score command (show score)
+				if word.replace("#","") == commands[3]:  # score (show scores)
+					print("-------Active Players-------")
+					for player_index in range(len(player)):
+						print(f"{player[player_index]} - {score[player_index]}")
+					print("-------Bailed Players-------")
+					for player_name in list(finals.keys()):
+						print(f"{player_name} - {finals[player_name]}")
 
-				# pickle the dict into a file (as defined by user)
-				with open(input("save file as (Example.txt, Example.Game, etc.):\n- "), 'wb') as f:
-					game_state = pickle.dump(game_state, f)
+				# check if it is a list command (show said words)
+				if word.replace("#","") == commands[4]:  # list (show said words)
+					print("---------Used Words---------")
+					for word in words:
+						print(word)
+			else:
+				# if command not recognized then just continue
+				print("command not recognized")
+			# after command is run continue (no word to test)
+			continue
 
-					# set running to false
-					running = False
-		else:
-			# if command not recognized then just continue
-			print("command not recognized")
-		# after command is run continue (no word to test)
-		continue
+		# check if the 2 words rhyme according to number of phonemes (pronounced sounds)
+		s = rhymeswith(word, startword, num_syl)
 
-	# check if the 2 words rhyme according to number of phonemes (pronounced sounds)
-	s = rhymeswith(word, startword, num_syl)
+		# if it is rhyming and the word hasn't already been used
+		if s and not (word.lower() in words or word.lower() in disallowed):
+			# append the word to used words
+			words.append(word.lower())
 
-	# if it is rhyming and the word hasn't already been used
-	if s and not (word.lower() in words):
-		# append the word to used words
-		words.append(word.lower())
+			# set previous to the current word
+			previous = word.lower()
 
-		# set previous to the current word
-		previous = word.lower()
-
-		# print that it was accepted and the word
-		print("Yes")
-		print(word)
-	else:
-		# if it fails then set previous to the current word
-		previous = word.lower()
-
-		# if debug print extra details
-		if debug:
+			# print that it was accepted and the word
+			print("Yes")
 			print(word)
-			print(word.lower() in words)
 
-		# if the word has been said already state it
-		if word.lower() in words:
-			status = f"{word} was already said"
+			score[player_turn] += 1
 
-		# if the word doesn't rhyme state it
 		else:
-			status = f"{word} does not rhyme with {startword}"
-		# state rejection and reason
-		print("No,", status)
-		# continue (don't change active player)
-		continue
+			# if it fails then set previous to the current word
+			previous = word.lower()
 
-	# change to next player
-	player_turn += 1
-	if player_turn >= len(player):
-		player_turn = 0
+			# if debug print extra details
+			if debug:
+				print(word)
+				print(word.lower() in words)
+
+			# if the word has been said already state it
+			if word.lower() in words:
+				status = f"{word} was already said"
+
+			# if the word doesn't rhyme state it
+			else:
+				status = f"{word} does not rhyme with {startword}"
+			# state rejection and reason
+			print("No,", status)
+			# continue (don't change active player)
+			continue
+
+		# change to next player
+		player_turn += 1
+		if player_turn >= len(player):
+			player_turn = 0
+except Exception as e:
+	if debug:
+		print(type(e))
+		print(e)
+	print("End of game")
+	print("-------Active Players-------")
+	for player_index in range(len(player)):
+		print(f"{player[player_index]} - {score[player_index]}")
+	print("-------Bailed Players-------")
+	for player_name in list(finals.keys()):
+		print(f"{player_name} - {finals[player_name]}")
