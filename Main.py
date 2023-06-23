@@ -1,9 +1,11 @@
 #### Keep a list of words, and check if new words rhyme with it
 
-import os, pickle
+import os, pickle, sys
 
 rhyming = {}
 debug = False
+
+clear = "cls" if "win" in sys.platform else "clear"
 
 for word in open('phodict.txt', 'r').readlines():
 	# word and phonemes is split by double space by sounds are split by single space
@@ -145,7 +147,7 @@ if new.lower().startswith('y'):
 		score.append(0)
 
 		# clear screen
-		os.system("cls")
+		os.system(clear)
 
 		# print player index and player name
 		print(f"player {player_index} is named {player[player_index]}")
@@ -200,13 +202,13 @@ else:
 				print(disallowed)
 			break
 		else:
-			os.system("cls")
+			os.system(clear)
 			print("file does not exist")
 			continue
 
 running = True
 
-os.system("cls")
+os.system(clear)
 
 if previous:
 	if previous in words:
@@ -225,7 +227,7 @@ try:
 		word = str(input("word:\n- "))
 
 		# clear screen
-		os.system("cls")
+		os.system(clear)
 
 		# is "word" a command?
 		if word.startswith("#"):
