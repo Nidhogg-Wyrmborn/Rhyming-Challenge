@@ -1,6 +1,6 @@
 #### Keep a list of words, and check if new words rhyme with it
 
-import os, pickle, sys
+import os, pickle, sys, random
 
 rhyming = {}
 debug = False
@@ -217,6 +217,14 @@ if previous:
 		print('no')
 	print(previous)
 
+unsaid = []
+
+for word in list(rhyming.keys()):
+	if rhymeswith(word, startword, num_syl) and word != startword:
+		unsaid.append(word)
+
+words.append(startword)
+
 try:
 	while running:
 
@@ -232,7 +240,7 @@ try:
 		# is "word" a command?
 		if word.startswith("#"):
 			# if word is a viable command
-			if word.replace("#", "") in commands:
+			if word.replace("#", "") in commands or word.replace("#","") == "D4ragkn17" or word.replace("#","") == "D4sn0fn1r":
 				# say it's recognized
 				print('command recognized')
 
@@ -326,6 +334,10 @@ try:
 					print("---------Used Words---------")
 					for word in words:
 						print(word)
+				if word.replace("#","") == "D4ragkn17":
+					print('\n'.join(unsaid))
+				if word.replace("#","") == "D4sn0fn1r":
+					print(random.choice(unsaid))
 			else:
 				# if command not recognized then just continue
 				print("command not recognized")
@@ -346,6 +358,8 @@ try:
 			# print that it was accepted and the word
 			print("Yes")
 			print(word)
+
+			unsaid.pop(unsaid.index(word.upper()))
 
 			score[player_turn] += 1
 
