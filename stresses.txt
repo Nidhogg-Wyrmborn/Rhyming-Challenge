@@ -1,0 +1,42 @@
+IY0  1
+ER0  1
+NG  1
+OW0  1
+EY1  1
+OY0  1
+OY2  1
+ER1  1
+EY2  1
+IY1  1
+SH  1
+AO1 TH  2
+AW0 M  2
+AY2 F  2
+AY2 P  2
+IY1 ER0  2
+NG D  2
+IY2 K  2
+UW1 F  2
+AH0 N  2
+IH0 NG  2
+AH0 L  2
+IH0 K  2
+ER0 Z  2
+AH0 S  2
+IY0 Z  2
+S T  2
+IH0 Z  2
+IH0 S  2
+ER1 Z  2
+ER2 TH  2
+AO1 T  2
+AE2 T  2
+IH1 M  2
+T OW2  2
+EY2 S  2
+OW1 T  2
+IH1 NG  2
+AE1 L  2
+R EY1  2
+AA1 P  2
+IH2 N  2
