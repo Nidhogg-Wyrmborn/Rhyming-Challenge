@@ -2,14 +2,30 @@ import os, pickle, sys, random, time
 
 stresses = {}
 
-debug = False
+Rdebug = False
 
 limit = 15
 
+clear = "cls" if "win" in sys.platform else "clear"
+
 for stress in open('stresses.txt', 'r').readlines():
-	stresses[stress.split('  ')[0]] = stress.split('  ')[-1]
+	stresses[stress.split('  ')[0]] = stress.split('  ')[-1].replace('\n','')
 
 def rhymeswith(wordA, wordB, phonemes, rhyming):
+	if Rdebug:
+		print(repr(phonemes))
+	if isinstance(phonemes, str):
+		if phonemes.endswith('\n'):
+			phonemes = phonemes.replace('\n', '')
+		if phonemes.isdigit():
+			phonemes = int(phonemes)
+		else:
+			print(repr(phonemes))
+			raise Exception("Phoneme is not digit")
+
+	if not isinstance(phonemes, int):
+		print(repr(phonemes))
+		raise Exception("Phoneme is not integer")
 	try:
 		wordA = rhyming[wordA.upper()]
 		wordB = rhyming[wordB.upper()]
@@ -18,7 +34,7 @@ def rhymeswith(wordA, wordB, phonemes, rhyming):
 			return True
 		return False
 	except Exception as e:
-		if debug:
+		if Rdebug:
 			print(type(e), e)
 		return None
 
@@ -93,7 +109,8 @@ class Rhyme:
 			self.player = []
 			if Settings:
 				if 'playerlimit' in Settings.keys():
-					self.player_limit = Settings["playerlimit"]
+					if Settings['playerlimit'].isdigit():
+						self.player_limit = int(Settings["playerlimit"])
 
 			# set current player's turn to 0 (first player)
 			self.player_turn = 0
@@ -136,23 +153,28 @@ class Rhyme:
 		# try if fail then return false
 		# try:
 		# set playerlimit to var from settings
-		self.playerlimit = Settings['playerlimit'] if 'playerlimit' in Settings.keys() else None
+		if 'playerlimit' in Settings.keys():
+			if Settings['playerlimit'].isdigit():
+				self.playerlimit = int(Settings['playerlimit'])
+		else:
+			pass
 		self.startword = Settings['startword'] if 'startword' in Settings.keys() else self.startword
 
 		if 'phonemes' in list(Settings.keys()):
 			self.num_phnm = Settings['phonemes']
 		else:
 			nowork = True
-			with open('stresses.txt', 'r').readlines() as stresses:
-				for stress in stresses:
-					if ' '.join(self.rhyming[self.startword]).endswith(stress.split('  ')[0]):
-						self.num_phnm = stress.split('  ')[0]
-						nowork = False
-						break
-					else:
-						nowork = True
+			for stress in list(stresses.keys()):
+				if ' '.join(self.rhyming[self.startword.upper()]).replace('\n','').endswith(stress):
+					self.num_phnm = stresses[stress]
+					if self.num_phnm.isdigit():
+						self.num_phnm = int(self.num_phnm)
+					nowork = False
+					break
+				else:
+					nowork = True
 			if nowork:
-				return [False, f"Stress is not available, please add stress from {self.rhyming[self.startword]} to stresses.txt"]
+				return [False, f"Stress is not available, please add stress from {self.rhyming[self.startword.upper()]} to stresses.txt"]
 
 		for word in list(self.rhyming.keys()):
 			if rhymeswith(word, self.startword, self.num_phnm, self.rhyming) and word != self.startword and word.lower() not in self.words:
@@ -212,8 +234,11 @@ class Rhyme:
 		return pickle.load(game_file)
 
 	# guess a word
-	def guess(self, word):
-		return self._guess(word)
+	def guess(self, word, name):
+		if self.player[self.player_turn].lower() == name.lower():
+			return self._guess(word)
+		else:
+			return [name, 'guessed out of turn']
 
 	# generate a hint
 	def genHint(self):
@@ -239,6 +264,7 @@ class Rhyme:
 	def _guess(self, word):
 		# result is empty string
 		result = ''
+		commands = ['dispute', 'bail', 'pause', 'score', 'list', 'hint']
 
 		# if guess is command
 		if word.startswith("#"):
@@ -250,6 +276,7 @@ class Rhyme:
 
 			# if command is viable
 			if command in commands or command == "D4ragkn17" or command == "D4sn0fn1r":
+				previous_player = self.player_turn
 				# if command is dispute
 				if command == commands[0]:  # dispute
 					# if there was a previous word
@@ -346,7 +373,7 @@ class Rhyme:
 					# pick random hint type (percentage)
 					hintType = random.randint(0,100)
 					if hintType < 25:  # phonetic
-						result += self.stress + "\n"
+						result += 'Phonetic rhyme: ' + self.stress + "\n"
 
 					# show starting letter of hint word (in dict of users)
 					if hintType >= 25:  
@@ -366,7 +393,7 @@ class Rhyme:
 							# if player has not had a hint word before create one
 							hw = self.genHint()
 						# add hint to result
-						result += hw[1]+"\n"
+						result += 'word starts with: '+hw[1]+"\n"
 
 				# if command is hidden command 1
 				if command == "D4ragkn17":
@@ -454,7 +481,7 @@ def exampleMain(startword:str, playerlimit:int, players:list=None, phonemes:int=
 			if result[0]:
 				print(f"successfully add {player}")
 			else:
-				print(failed, result[1])
+				print('failed', result[1])
 
 	if debug:
 		print(r.player)
@@ -470,7 +497,8 @@ def exampleMain(startword:str, playerlimit:int, players:list=None, phonemes:int=
 			running = False
 			continue
 		else:
-			print(''.join(r.guess(guess)))
+			os.system(clear)
+			print('\n-\t'.join(r.guess(guess)))
 
 if __name__ == '__main__':
 	test = input('[T]est or [P]lay?\n- ').lower()[0]

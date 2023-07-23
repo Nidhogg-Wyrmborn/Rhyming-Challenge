@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name='viewport' content='width=device-width, initial-scale=1'>
+	<title>Rhyming Challenge</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+</head>
+<body>
+	<h1>Game: {{ gamecode }}</h1>
+	<button onClick='window.location.href = "/"'>Home</button>
+	<p id='output'></p>
+	<br>
+	<label for='Guess'>Guess a word that rhymes with {{ word }}:</label><br>
+	<input name='Guess' id='Guess' type='text'><br>
+	<button id='submitGuess' onClick='submit()'>Guess</button>
+	<script>
+		socket = io()
+		var connected = false;
+		var name = '{{ name }}';
+		var gamecode = '{{ gamecode }}';
+		socket.on('connect', function() {
+			socket.emit('join', {roomcode: gamecode, name: name})
+			connected = true;
+		});
+
+		socket.on('disconnect', function() {
+			socket.emit('leave', {roomcode: gamecode, name: name})
+			connected = false;
+		});
+
+		socket.on('response', function(data) {
+			var roomcode = data['roomcode'];
+			var data = data['response'];
+			document.getElementById('output').innerHTML = data;
+		});
+
+		socket.on('redirect', function(destination) {
+			window.location.href = destination;
+		});
+
+		function submit(){
+			var guess = document.getElementById('Guess').value;
+			if ((guess != null || guess != '') && connected) {
+				socket.emit('guess', {guess: guess, roomcode: gamecode, name: name})
+			}
+		}
+
+		function handleSocket(){
+			socket.emit('present', {roomcode: gamecode, name: name})
+		}
+
+		setInterval(handleSocket, 10000)
+	</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<meta name="viewport" content='width=device-width, initial-scale=1'>
+	<title>Rhyming Challenge</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+</head>
+<body>
+	<h1>Create Game</h1>
+	<button onClick='window.location.href = "/"'>Back</button><br>
+	<label for='pCount'>Number of Players:</label><br>
+	<input name='PlayerCount' id='pCount' type='number'><br>
+	<label for='pName'>Your Name:</label><br>
+	<input name='PlayerName' id='pName' type='text'><br>
+	<label for='sWord' id='sLabel' hidden>Starting Word</label><br>
+	<input name='StartWord' id='sWord' type='text' hidden><br>
+	<br>
+	<button id='showButton' onClick='showCustom()'>Custom Start Word</button>
+	<button id='hideButton' onClick='hideCustom()' hidden>Random Start Word</button>
+	<button onClick='submit()'>Submit</button>
+	<script src="{{ url_for('static', filename='Common.js')}}"></script>
+</body>
+</html>

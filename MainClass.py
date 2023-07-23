@@ -798,7 +798,7 @@ def game(roomcode, name):
 			"});",
 			"function guess() {",
 			f"socket.emit('guess', {{guess: document.getElementById('answer').value, name: '{name}', roomcode: '{roomcode}'}});",
-			"}"
+			"}",
 			"</script>"
 		]
 
